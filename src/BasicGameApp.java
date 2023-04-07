@@ -12,6 +12,7 @@
 //import java.awt.Canvas;
 
 //Graphics Libraries
+
 import java.awt.Graphics2D;
 import java.awt.event.*;
 import java.awt.image.BufferStrategy;
@@ -40,9 +41,10 @@ public class BasicGameApp implements Runnable, KeyListener, MouseListener, Mouse
     public JPanel panel;
 
     public BufferStrategy bufferStrategy;
-    public Image fishPic;
     public Image BobPic;
-    public Image JellyFishPic;
+    public Image jellyfPic;
+    public Image patPic;
+    public Image jamPic;
     public Image background;
     public Image gameOver;
 
@@ -50,8 +52,12 @@ public class BasicGameApp implements Runnable, KeyListener, MouseListener, Mouse
     //Declare the objects used in the program
     //These are things that are made up of more than one variable type
 
-    private Character Bob;
-    private Character JellyFish;
+    private Player Bob;
+    private Jellyfish[] jellyf;
+
+    private Character pat;
+
+    private Character jam;
 
 
     private boolean winning = false;
@@ -74,41 +80,41 @@ public class BasicGameApp implements Runnable, KeyListener, MouseListener, Mouse
 
         //variable and objects
         //create (construct) the objects needed for the game and load up
-      background = Toolkit.getDefaultToolkit().getImage("jfish.jpeg");
+        background = Toolkit.getDefaultToolkit().getImage("jfish.jpeg");
         gameOver = Toolkit.getDefaultToolkit().getImage("finish.jpeg");
-        Bob = new Character(550, 300, 0);
-        BobPic= Toolkit.getDefaultToolkit().getImage("sbob.png");
-        JellyFish = new Character(0,0,1);
-        JellyFishPic = Toolkit.getDefaultToolkit().getImage("fish");
+        Bob = new Player(550, 300, 0, 0);
+        BobPic = Toolkit.getDefaultToolkit().getImage("sbob.png");
+        jellyfPic = Toolkit.getDefaultToolkit().getImage("fish.png");
+        pat = new Character(700, 300, 0, 3, 100, 200);
+        jam = new Character(pat.xpos, pat.ypos, 0, 0, 70, 70);
+        jam.isAlive = false;
+        jamPic = Toolkit.getDefaultToolkit().getImage("jam.png");
+        patPic = Toolkit.getDefaultToolkit().getImage("pat.png");
 
-    }// BasicGameApp()
+        jellyf = new Jellyfish[5];
+        for (int x = 0; x < 5; x++) {
+            jellyf[x] = new Jellyfish((int) (400 * (Math.random())), (int) (500 * Math.random()), 3, 3, jellyfPic);
+        }
+    }
 
-
-//*******************************************************************************
-//User Method Section
-//
-// put your code to do things here.
-
-    // main thread
-    // this is the code that plays the game after you set things up
     public void run() {
 
         //for the moment we will loop things forever.
         while (true) {
-
+            checkIntersections();
             moveThings();  //move all the game objects
             render();  // paint the graphics
             pause(20); // sleep for 10 ms
         }
     }
 
-
-
     public void moveThings() {
         Bob.move();
-        Bob.bounce();
-        JellyFish.move();
+        pat.wrap();
+        for (int x = 0; x < 5; x++) {
+            jellyf[x].bounce();
         }
+    }
 
     //Pauses or sleeps the computer for the amount specified in milliseconds
     public void pause(int time) {
@@ -165,7 +171,17 @@ public class BasicGameApp implements Runnable, KeyListener, MouseListener, Mouse
 
         g.drawImage(background, 0, 0, WIDTH, HEIGHT, null);
         g.drawImage(BobPic, Bob.xpos, Bob.ypos, Bob.width, Bob.height, null);
-        g.drawImage(JellyFishPic, JellyFish.xpos,JellyFish.ypos, JellyFish.width, JellyFish.height, null);
+        g.drawImage(patPic, pat.xpos, pat.ypos, pat.width, pat.height, null);
+//        if ((Bob.isStockFull && jam.isAlive) = true){
+            g.drawImage(jamPic, jam.xpos, jam.ypos, jam.width, jam.height, null);
+//        }
+        for (int x = 0; x < 5; x++) {
+            if (jellyf[x].isAlive) {
+                g.drawImage(jellyf[x].pic, jellyf[x].xpos, jellyf[x].ypos, jellyf[x].width, jellyf[x].height, null);
+                g.draw(new Rectangle(jellyf[x].xpos, jellyf[x].ypos, jellyf[x].width, jellyf[x].height));
+            }
+        }
+
         g.dispose();
 
 
@@ -180,37 +196,71 @@ public class BasicGameApp implements Runnable, KeyListener, MouseListener, Mouse
     @Override
     public void keyPressed(KeyEvent e) {
         int keyCode = e.getKeyCode();
-        System.out.println(keyCode);
+//        System.out.println(keyCode);
 
-        if(keyCode == 83) { // s
+        if (keyCode == 83) { // s
 //            Bob.dy = Math.abs(Bob.dy);
-            Bob.dy = Math.abs(Bob.dy- 1);
+            Bob.down = true;
         }
 
-        if(keyCode == 87){ //w
+        if (keyCode == 87) { //w
 //            Bob.dy = -Math.abs(Bob.dy);
-            Bob.dy = Bob.dy -1;
+            Bob.up = true;
         }
 
-        if(keyCode == 65){ //a
+        if (keyCode == 65) { //a
 //            Bob.dx = -Math.abs(Bob.dx);
-            Bob.dx = -Math.abs(Bob.dx-1);
+            Bob.left = true;
         }
-        if(keyCode == 68){ //d
-            Bob.dx = Math.abs(Bob.dx);
+        if (keyCode == 68) { //d
+            Bob.right = true;
+        }
+    }
+
+    public void checkIntersections() {
+        for (int x = 0; x < 5; x++) {
+            if (Bob.rec.intersects(jellyf[x].rec) && Bob.stock < 5 && jellyf[x].isCrashing == false && jellyf[x].isAlive) {
+                jellyf[x].isAlive = false;
+                jellyf[x].isCrashing = true;
+                //  if (Bob.rec.intersects(jellyf[4].rec)) {
+                Bob.stock++;
+                System.out.println("spongebob's stock is " + Bob.stock);
+                if (Bob.stock == 5) {
+                    Bob.isStockFull = true;
+                    System.out.println("spongebob's stock is full");
+                }
+
+            }
         }
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
+        char key = e.getKeyChar();
+        int keyCode = e.getKeyCode();
+        //This method will do something when a key is released
+        if (keyCode == 68) { // d
+            Bob.right = false;
+        }
+        if (keyCode == 65) { // a
+            Bob.left = false;
+        }
+        if (keyCode == 83) { // s
+            Bob.down = false;
+        }
+        if (keyCode == 87) { // w
+            Bob.up = false;
+        }
     }
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        System.out.println(e.getX());
-        Bob.xpos=e.getX();
-        Bob.ypos=e.getY();
+//        System.out.println(e.getX());
+//        pat.xpos=e.getX();
+//        pat.ypos=e.getY();
+
     }
+
 
     @Override
     public void mousePressed(MouseEvent e) {
@@ -239,7 +289,7 @@ public class BasicGameApp implements Runnable, KeyListener, MouseListener, Mouse
 
     @Override
     public void mouseMoved(MouseEvent e) {
-        System.out.println(e.getX());
+//        System.out.println(e.getX());
     }
 }
 
