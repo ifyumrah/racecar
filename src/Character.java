@@ -30,7 +30,7 @@ public class Character {
         isAlive = true;
         intersect = false;
         isCrashing = false;
-        rec = new Rectangle(xpos, ypos, height, width);
+        rec = new Rectangle(xpos, ypos,width,height);
     }
 
     public void wrap() {
@@ -43,7 +43,7 @@ public class Character {
         }
         xpos = xpos + dx;
         ypos = ypos + dy;
-        rec = new Rectangle(xpos, ypos, height, width);
+        rec = new Rectangle(xpos, ypos, width,height);
 
     }
 }

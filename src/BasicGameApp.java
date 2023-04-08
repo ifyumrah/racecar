@@ -48,6 +48,11 @@ public class BasicGameApp implements Runnable, KeyListener, MouseListener, Mouse
     public Image background;
     public Image gameOver;
 
+    public long currentTime;
+    public long startTime;
+
+    public boolean isgameOver;
+
 
     //Declare the objects used in the program
     //These are things that are made up of more than one variable type
@@ -77,7 +82,7 @@ public class BasicGameApp implements Runnable, KeyListener, MouseListener, Mouse
     // Initialize your variables and construct your program objects here.
     public BasicGameApp() {
         setUpGraphics();
-
+        isgameOver = false;
         //variable and objects
         //create (construct) the objects needed for the game and load up
         background = Toolkit.getDefaultToolkit().getImage("jfish.jpeg");
@@ -91,9 +96,9 @@ public class BasicGameApp implements Runnable, KeyListener, MouseListener, Mouse
         jamPic = Toolkit.getDefaultToolkit().getImage("jam.png");
         patPic = Toolkit.getDefaultToolkit().getImage("pat.png");
 
-        jellyf = new Jellyfish[5];
-        for (int x = 0; x < 5; x++) {
-            jellyf[x] = new Jellyfish((int) (400 * (Math.random())), (int) (500 * Math.random()), 3, 3, jellyfPic);
+        jellyf = new Jellyfish[10];
+        for (int x = 0; x < 10; x++) {
+            jellyf[x] = new Jellyfish((int) (1000 * (Math.random())), (int) (650 * Math.random()), 1, 1, jellyfPic);
         }
     }
 
@@ -111,7 +116,7 @@ public class BasicGameApp implements Runnable, KeyListener, MouseListener, Mouse
     public void moveThings() {
         Bob.move();
         pat.wrap();
-        for (int x = 0; x < 5; x++) {
+        for (int x = 0; x < 10; x++) {
             jellyf[x].bounce();
         }
     }
@@ -167,20 +172,30 @@ public class BasicGameApp implements Runnable, KeyListener, MouseListener, Mouse
         Graphics2D g = (Graphics2D) bufferStrategy.getDrawGraphics();
         g.clearRect(0, 0, WIDTH, HEIGHT);
 
-        //draw the image of the astronaut
+        currentTime = System.currentTimeMillis();
 
-        g.drawImage(background, 0, 0, WIDTH, HEIGHT, null);
-        g.drawImage(BobPic, Bob.xpos, Bob.ypos, Bob.width, Bob.height, null);
-        g.drawImage(patPic, pat.xpos, pat.ypos, pat.width, pat.height, null);
-//        if ((Bob.isStockFull && jam.isAlive) = true){
-            g.drawImage(jamPic, jam.xpos, jam.ypos, jam.width, jam.height, null);
-//        }
-        for (int x = 0; x < 5; x++) {
-            if (jellyf[x].isAlive) {
-                g.drawImage(jellyf[x].pic, jellyf[x].xpos, jellyf[x].ypos, jellyf[x].width, jellyf[x].height, null);
-                g.draw(new Rectangle(jellyf[x].xpos, jellyf[x].ypos, jellyf[x].width, jellyf[x].height));
+        if(isgameOver == true && currentTime-startTime > 2000) {
+            g.drawImage(gameOver,0,0,WIDTH,HEIGHT,null);
+        }
+        else{
+
+            //draw the image of the astronaut
+
+            g.drawImage(background, 0, 0, WIDTH, HEIGHT, null);
+            g.drawImage(BobPic, Bob.xpos, Bob.ypos, Bob.width, Bob.height, null);
+            g.drawImage(patPic, pat.xpos, pat.ypos, pat.width, pat.height, null);
+//            g.draw(new Rectangle(pat.rec.x, pat.rec.y, pat.rec.width, pat.rec.height));
+            if (Bob.isStockFull && jam.isAlive) {
+//                g.draw(new Rectangle(jam.rec.x, jam.rec.y, jam.rec.width, jam.rec.height));
+                g.drawImage(jamPic, jam.xpos, jam.ypos, jam.width, jam.height, null);
+            }
+            for (int x = 0; x < 10; x++) {
+                if (jellyf[x].isAlive) {
+                    g.drawImage(jellyf[x].pic, jellyf[x].xpos, jellyf[x].ypos, jellyf[x].width, jellyf[x].height, null);
+                }
             }
         }
+
 
         g.dispose();
 
@@ -218,20 +233,31 @@ public class BasicGameApp implements Runnable, KeyListener, MouseListener, Mouse
     }
 
     public void checkIntersections() {
-        for (int x = 0; x < 5; x++) {
-            if (Bob.rec.intersects(jellyf[x].rec) && Bob.stock < 5 && jellyf[x].isCrashing == false && jellyf[x].isAlive) {
+        for (int x = 0; x < 10; x++) {
+            if (Bob.rec.intersects(jellyf[x].rec) && Bob.stock < 10 && jellyf[x].isCrashing == false && jellyf[x].isAlive) {
                 jellyf[x].isAlive = false;
                 jellyf[x].isCrashing = true;
                 //  if (Bob.rec.intersects(jellyf[4].rec)) {
                 Bob.stock++;
                 System.out.println("spongebob's stock is " + Bob.stock);
-                if (Bob.stock == 5) {
+                if (Bob.stock == 10) {
                     Bob.isStockFull = true;
+                    jam.isAlive = true;
                     System.out.println("spongebob's stock is full");
                 }
 
             }
         }
+        if(Bob.isStockFull && jam.rec.intersects(pat.rec) && jam.isCrashing==false && jam.isAlive){
+            jam.isAlive = false;
+            jam.isCrashing = true;
+            pat.width = (pat.width + 100);
+            System.out.println("yum");
+            isgameOver = true;
+            startTime = System.currentTimeMillis();
+        }
+
+
     }
 
     @Override
@@ -264,7 +290,8 @@ public class BasicGameApp implements Runnable, KeyListener, MouseListener, Mouse
 
     @Override
     public void mousePressed(MouseEvent e) {
-
+//    jam.xpos = e.getX();
+//    jam.ypos = e.getY();
     }
 
     @Override
@@ -284,7 +311,9 @@ public class BasicGameApp implements Runnable, KeyListener, MouseListener, Mouse
 
     @Override
     public void mouseDragged(MouseEvent e) {
-
+        jam.xpos=e.getX();
+        jam.ypos=e.getY();
+        jam.rec = new Rectangle(jam.xpos,jam.ypos,jam.width,jam.height);
     }
 
     @Override

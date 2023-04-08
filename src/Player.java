@@ -52,16 +52,16 @@ public class Player { public String name;                //holds the name of the
         ypos = ypos + dy;
 
         if(right == true){
-            dx = 2;
+            dx = 10;
         } else if (left == true) {
-            dx = -2;
+            dx = -10;
         } else {
             dx = 0;
 
             if(down == true){
-                dy = 2;
+                dy = 10;
             } else if (up == true) {
-                dy = -2;
+                dy = -10;
             } else {
                 dy = 0;
             }
